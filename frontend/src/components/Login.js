@@ -12,7 +12,7 @@ function Login() {
   const navigate = useNavigate();
   
   useEffect(() => {
-    if (settings.voiceEnabled) {
+    if (settings.enableVoiceNavigation) {
       speak('Login page loaded. Please enter your email and password.');
     }
   }, []); // 🔴 Runs only once on page load
@@ -25,7 +25,7 @@ function Login() {
   e.preventDefault();
 
   setStatusMessage('Logging in. Please wait');
-  if (settings.voiceEnabled) {
+  if (settings.enableVoiceNavigation) {
     speak('Logging in. Please wait');
   }
 
@@ -33,7 +33,7 @@ function Login() {
 
   if (success) {
     setStatusMessage('Login successful. Welcome to UPI Saathi. Redirecting to dashboard');
-    if (settings.voiceEnabled) {
+    if (settings.enableVoiceNavigation) {
       speak('Login successful. Welcome to UPI Saathi. Redirecting to dashboard');
     }
 
@@ -43,7 +43,7 @@ function Login() {
     }, 1200);
   } else {
     setStatusMessage('Login failed. Please check your credentials');
-    if (settings.voiceEnabled) {
+    if (settings.enableVoiceNavigation) {
       speak('Login failed. Please check your credentials');
     }
   }
@@ -51,47 +51,55 @@ function Login() {
 
 
   return (
-    <div style={{ maxWidth: '400px', margin: '40px auto', padding: '20px' }}>
-      <h1>UPI-saathi Login</h1>
-      <div
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-        style={{ position: 'absolute', left: '-9999px' }}
-      >
-        {statusMessage}
+    <div className="page auth-page">
+      <div className="card auth-card">
+        <div className="brand">
+          <div className="brand-mark">UPI</div>
+          <div>
+            <h2>UPI Saathi</h2>
+            <p className="subtle">Accessible payments for everyone</p>
+          </div>
+        </div>
+        <h3>Login</h3>
+        <div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          style={{ position: 'absolute', left: '-9999px' }}
+        >
+          {statusMessage}
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="form-row">
+            <label className="label" htmlFor="email">Email</label>
+            <input
+              className="input"
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-row">
+            <label className="label" htmlFor="password">Password</label>
+            <input
+              className="input"
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <button aria-label="Login to your UPI Saathi account" type="submit" className="btn btn-primary btn-block">
+            Login
+          </button>
+        </form>
+        <p style={{ marginTop: '20px', textAlign: 'center' }}>
+          Don't have an account? <Link to="/register">Register</Link>
+        </p>
       </div>
-
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{ width: '100%', padding: '10px' }}
-          />
-        </div>
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ width: '100%', padding: '10px' }}
-          />
-        </div>
-        <button aria-label="Login to your UPI Saathi account" type="submit" style={{ width: '100%', padding: '12px' }}>
-          Login
-        </button>
-      </form>
-      <p style={{ marginTop: '20px' }}>
-        Don't have an account? <Link to="/register">Register</Link>
-      </p>
     </div>
   );
 }

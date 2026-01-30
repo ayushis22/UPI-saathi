@@ -5,6 +5,8 @@ export const useVoice = ({ onCommand }) => {
   const recognitionRef = useRef(null);
   const [listening, setListening] = useState(false);
   const [error, setError] = useState(null);
+  const shouldListenRef = useRef(false);
+  const restartTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (!('webkitSpeechRecognition' in window)) {
@@ -26,27 +28,76 @@ export const useVoice = ({ onCommand }) => {
 
     recognition.onerror = (e) => {
       console.error('Voice error:', e);
+      if (e.error === 'aborted' || e.error === 'no-speech') {
+        if (shouldListenRef.current) {
+          if (restartTimeoutRef.current) {
+            clearTimeout(restartTimeoutRef.current);
+          }
+          restartTimeoutRef.current = setTimeout(() => {
+            try {
+              recognitionRef.current?.start();
+              setListening(true);
+            } catch (err) {
+              // ignore
+            }
+          }, 250);
+        }
+        return;
+      }
       setError(e.error);
       setListening(false);
     };
 
     recognition.onend = () => {
       setListening(false);
+      if (shouldListenRef.current) {
+        if (restartTimeoutRef.current) {
+          clearTimeout(restartTimeoutRef.current);
+        }
+        restartTimeoutRef.current = setTimeout(() => {
+          try {
+            recognitionRef.current?.start();
+            setListening(true);
+          } catch (err) {
+            // ignore
+          }
+        }, 250);
+      }
     };
 
     recognitionRef.current = recognition;
 
-    return () => recognition.stop();
+    return () => {
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
+      }
+      recognition.stop();
+    };
   }, [onCommand]);
 
   const startListening = () => {
-    if (recognitionRef.current && !listening) {
+    shouldListenRef.current = true;
+    if (!recognitionRef.current) {
+      setError('not-supported');
+      return;
+    }
+    if (listening) return;
+    try {
       recognitionRef.current.start();
       setListening(true);
+      setError(null);
+    } catch (err) {
+      const name = err?.name || err?.message || 'not-allowed';
+      setError(name);
+      setListening(false);
+      shouldListenRef.current = false;
     }
   };
 
-  const stopListening = () => {
+  const stopListening = (options = {}) => {
+    if (!options.temporary) {
+      shouldListenRef.current = false;
+    }
     recognitionRef.current?.stop();
     setListening(false);
   };

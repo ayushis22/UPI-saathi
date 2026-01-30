@@ -11,39 +11,37 @@ function Transactions() {
   }, []);
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>Transaction History</h2>
+    <div className="page">
+      <div className="page-header">
+        <div>
+          <div className="page-title">Transaction History</div>
+          <p className="subtle">Review recent activity and statuses.</p>
+        </div>
+        <button onClick={() => navigate('/dashboard')} className="btn btn-outline">
+          Back to Dashboard
+        </button>
+      </div>
       {transactions.length === 0 ? (
-        <p style={{ marginTop: '20px' }}>No transactions yet</p>
+        <div className="card">
+          <p>No transactions yet</p>
+        </div>
       ) : (
-        <div style={{ marginTop: '20px' }}>
+        <div className="list">
           {transactions.map((txn) => (
-            <div 
-              key={txn._id} 
-              style={{ 
-                border: '1px solid #ddd', 
-                padding: '15px', 
-                marginBottom: '10px',
-                borderRadius: '5px'
-              }}
-            >
-              <p><strong>ID:</strong> {txn.transactionId}</p>
-              <p><strong>To:</strong> {txn.recipient.upiId}</p>
+            <div key={txn._id} className="list-item">
+              <div className="actions-row" style={{ justifyContent: 'space-between' }}>
+                <strong>{txn.recipient.upiId}</strong>
+                <span className="pill" style={{ color: txn.status === 'completed' ? '#0f9d58' : '#dc3545' }}>
+                  {txn.status}
+                </span>
+              </div>
               <p><strong>Amount:</strong> ₹{txn.amount}</p>
-              <p><strong>Status:</strong> <span style={{ 
-                color: txn.status === 'completed' ? '#28a745' : '#dc3545' 
-              }}>{txn.status}</span></p>
-              <p><strong>Date:</strong> {new Date(txn.createdAt).toLocaleString()}</p>
+              <p className="subtle">ID: {txn.transactionId}</p>
+              <p className="subtle">{new Date(txn.createdAt).toLocaleString()}</p>
             </div>
           ))}
         </div>
       )}
-      <button 
-        onClick={() => navigate('/dashboard')} 
-        style={{ marginTop: '20px', padding: '15px 30px' }}
-      >
-        Back to Dashboard
-      </button>
     </div>
   );
 }

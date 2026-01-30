@@ -4,7 +4,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 // import { ScreenReaderProvider } from './contexts/ScreenReaderContext';
 // Contexts
-import { AuthProvider, useAuth,useAccessibility } from './contexts/AllContexts';
+import { AuthProvider, useAuth } from './contexts/AllContexts';
 import { AccessibilityProvider } from './contexts/AllContexts';
 import { TransactionProvider } from './contexts/AllContexts';
 

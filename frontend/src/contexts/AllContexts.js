@@ -109,10 +109,10 @@ export const AuthProvider = ({ children }) => {
 
   const updateAccessibilitySettings = async (settings) => {
     try {
-      const response = await axios.put(`${API_URL}/auth/accessibility-settings`, {
+      await axios.put(`${API_URL}/auth/accessibility-settings`, {
         accessibilitySettings: settings
       });
-      setUser(response.data.data);
+      await loadUser();
       toast.success('Settings updated successfully');
       return true;
     } catch (error) {
@@ -150,21 +150,35 @@ export const useAccessibility = () => {
 };
 
 export const AccessibilityProvider = ({ children }) => {
-  const [settings, setSettings] = useState({
-    voiceEnabled: true,
-    highContrast: false,
+  const defaultSettings = {
+    enableVoiceNavigation: true,
+    enableScreenReader: false,
+    highContrastMode: false,
     fontSize: 'medium',
-    screenReaderMode: false
-  });
+    voiceSpeed: 1.0,
+    hapticFeedback: true,
+    confirmationDelay: 5,
+    enableBiometric: false
+  };
+  const [settings, setSettings] = useState(defaultSettings);
+  const { user } = useAuth();
 
   // const [isListening, setIsListening] = useState(false);
   // const [recognition, setRecognition] = useState(null);
+
+  const normalizeSettings = (incoming = {}) => {
+    const mapped = { ...incoming };
+    if ('voiceEnabled' in incoming) mapped.enableVoiceNavigation = incoming.voiceEnabled;
+    if ('highContrast' in incoming) mapped.highContrastMode = incoming.highContrast;
+    if ('screenReaderMode' in incoming) mapped.enableScreenReader = incoming.screenReaderMode;
+    return { ...defaultSettings, ...mapped };
+  };
 
   useEffect(() => {
     // Load settings from localStorage
     const saved = localStorage.getItem('accessibilitySettings');
     if (saved) {
-      setSettings(JSON.parse(saved));
+      setSettings(normalizeSettings(JSON.parse(saved)));
     }
 
     // Initialize speech recognition
@@ -178,12 +192,18 @@ export const AccessibilityProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    if (user?.accessibilitySettings) {
+      setSettings(prev => normalizeSettings({ ...prev, ...user.accessibilitySettings }));
+    }
+  }, [user]);
+
+  useEffect(() => {
     // Save settings to localStorage
     localStorage.setItem('accessibilitySettings', JSON.stringify(settings));
 
     // Apply global styles
     document.body.className = '';
-    if (settings.highContrast) {
+    if (settings.highContrastMode) {
       document.body.classList.add('high-contrast');
     }
     document.body.classList.add(`font-${settings.fontSize}`);
@@ -193,7 +213,7 @@ export const AccessibilityProvider = ({ children }) => {
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'en-IN';
-      utterance.rate = 1.0;
+      utterance.rate = settings.voiceSpeed || 1.0;
       window.speechSynthesis.speak(utterance);
     }
   };
@@ -224,15 +244,41 @@ export const AccessibilityProvider = ({ children }) => {
   // };
 
   const toggleVoice = () => {
-    setSettings(prev => ({ ...prev, voiceEnabled: !prev.voiceEnabled }));
+    setSettings(prev => ({ ...prev, enableVoiceNavigation: !prev.enableVoiceNavigation }));
+  };
+
+  const toggleScreenReader = () => {
+    setSettings(prev => ({ ...prev, enableScreenReader: !prev.enableScreenReader }));
   };
 
   const toggleHighContrast = () => {
-    setSettings(prev => ({ ...prev, highContrast: !prev.highContrast }));
+    setSettings(prev => ({ ...prev, highContrastMode: !prev.highContrastMode }));
+  };
+
+  const toggleHaptic = () => {
+    setSettings(prev => ({ ...prev, hapticFeedback: !prev.hapticFeedback }));
+  };
+
+  const toggleBiometric = () => {
+    setSettings(prev => ({ ...prev, enableBiometric: !prev.enableBiometric }));
   };
 
   const setFontSize = (size) => {
     setSettings(prev => ({ ...prev, fontSize: size }));
+  };
+
+  const setVoiceSpeed = (speed) => {
+    const parsed = parseFloat(speed);
+    if (!Number.isNaN(parsed)) {
+      setSettings(prev => ({ ...prev, voiceSpeed: parsed }));
+    }
+  };
+
+  const setConfirmationDelay = (seconds) => {
+    const parsed = parseInt(seconds, 10);
+    if (!Number.isNaN(parsed)) {
+      setSettings(prev => ({ ...prev, confirmationDelay: parsed }));
+    }
   };
 
   const value = {
@@ -243,7 +289,12 @@ export const AccessibilityProvider = ({ children }) => {
     // isListening,
     toggleVoice,
     toggleHighContrast,
-    setFontSize
+    toggleScreenReader,
+    toggleHaptic,
+    toggleBiometric,
+    setFontSize,
+    setVoiceSpeed,
+    setConfirmationDelay
   };
 
   return (
@@ -277,7 +328,12 @@ export const TransactionProvider = ({ children }) => {
     try {
 
       setLoading(true);
-      const response = await axios.post(`${API_URL}/transactions/send`, transactionData);
+      const response = await axios.post(`${API_URL}/transactions/send`, {
+        ...transactionData,
+        usedVoiceNavigation: settings.enableVoiceNavigation,
+        usedScreenReader: settings.enableScreenReader,
+        confirmationMethod: settings.enableBiometric ? 'biometric' : 'voice'
+      });
       setCurrentTransaction(response.data.data);
       const rawAmount = transactionData?.amount;
 
@@ -287,13 +343,13 @@ export const TransactionProvider = ({ children }) => {
   : 'Transaction initiated successfully';
       if (response.data?.flagged) {
         toast.warning('Transaction flagged for security review');
-        if (settings.voiceEnabled) {
+        if (settings.enableVoiceNavigation) {
           speak('Transaction flagged for security review');
         }
       } else {
         notifySuccess({
           message,
-          speakEnabled: settings.voiceEnabled,
+          speakEnabled: settings.enableVoiceNavigation,
           speak
         });
       }
@@ -369,7 +425,7 @@ export const TransactionProvider = ({ children }) => {
         : 'Payment completed successfully on UPI Saathi';
     notifySuccess({
       message,
-      speakEnabled: settings.voiceEnabled,
+      speakEnabled: settings.enableVoiceNavigation,
       speak
     });
       setCurrentTransaction(null);
@@ -402,7 +458,7 @@ export const TransactionProvider = ({ children }) => {
         { reason }
       );
       toast.success('Transaction cancelled successfully');
-      if (settings.voiceEnabled) {
+      if (settings.enableVoiceNavigation) {
         speak('Transaction cancelled');
       }
       setCurrentTransaction(null);

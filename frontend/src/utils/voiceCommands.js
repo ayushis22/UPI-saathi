@@ -16,6 +16,30 @@ export const parseVoiceCommand = (text) => {
     return { action: 'NAVIGATE', target: '/dashboard' };
   }
 
+  if (text.includes('settings')) {
+    return { action: 'NAVIGATE', target: '/settings' };
+  }
+
+  if (text.includes('fraud') || text.includes('alerts')) {
+    return { action: 'NAVIGATE', target: '/fraud-alerts' };
+  }
+
+  if (text.includes('trusted contacts') || text.includes('contacts')) {
+    return { action: 'NAVIGATE', target: '/trusted-contacts' };
+  }
+
+  if (text.includes('logout') || text.includes('log out')) {
+    return { action: 'LOGOUT' };
+  }
+
+  if (text.includes('go back') || text.includes('back')) {
+    return { action: 'BACK' };
+  }
+
+  if (text.includes('help')) {
+    return { action: 'HELP' };
+  }
+
   if (text.includes('confirm')) {
     return { action: 'CONFIRM_TRANSACTION' };
   }

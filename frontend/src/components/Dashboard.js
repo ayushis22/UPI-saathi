@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AllContexts';
-import VoiceInterface from './VoiceInterface'; 
+import AccessibilityControls from './AccessibilityControls';
 function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -27,37 +27,47 @@ function Dashboard() {
   //   }
   // };
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>UPI-saathi</h1>
-      <h2>Welcome, {user?.name}!</h2>     
-      <div style={{ marginTop: '20px' }}>
-        <p><strong>Balance:</strong> ₹{user?.balance}</p>
-        <p><strong>UPI ID:</strong> {user?.upiId}</p>
-      </div>      
-      <div style={{ marginTop: '30px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-        <button onClick={() => navigate('/send-money')} style={{ padding: '15px 30px' }}>
-          Send Money
-        </button>
-        <button onClick={() => navigate('/transactions')} style={{ padding: '15px 30px' }}>
-          View Transactions
-        </button>
-        <button onClick={() => navigate('/settings')} style={{ padding: '15px 30px' }}>
-          Settings
-        </button>
-        <button onClick={() => navigate('/fraud-alerts')} style={{ padding: '15px 30px' }}>
-          Fraud Alerts
-        </button>
-        <button onClick={() => navigate('/trusted-contacts')} style={{ padding: '15px 30px' }}>
-          Trusted Contacts
-        </button>
-
-        <button onClick={logout} style={{ padding: '15px 30px', background: '#dc3545' }}>
+    <div className="page">
+      <div className="page-header">
+        <div>
+          <div className="page-title">UPI Saathi</div>
+          <p className="subtle">Welcome back, {user?.name}</p>
+        </div>
+        <button onClick={logout} className="btn btn-outline">
           Logout
         </button>
       </div>
-      {/* <div style={{ marginTop: '40px' }}>
-        <VoiceInterface onAction={handleVoiceAction} />
-      </div> */}
+
+      <div className="grid two-col">
+        <div className="card">
+          <div className="badge">Primary Account</div>
+          <h2 style={{ marginTop: '12px' }}>₹{user?.balance}</h2>
+          <p className="subtle">Available balance</p>
+          <div className="divider" />
+          <p><strong>UPI ID:</strong> {user?.upiId}</p>
+        </div>
+        <div className="card">
+          <h3 className="section-title">Quick Actions</h3>
+          <div className="actions-row">
+            <button onClick={() => navigate('/send-money')} className="btn btn-primary">
+              Send Money
+            </button>
+            <button onClick={() => navigate('/transactions')} className="btn btn-secondary">
+              View Transactions
+            </button>
+            <button onClick={() => navigate('/trusted-contacts')} className="btn btn-secondary">
+              Trusted Contacts
+            </button>
+            <button onClick={() => navigate('/fraud-alerts')} className="btn btn-secondary">
+              Fraud Alerts
+            </button>
+            <button onClick={() => navigate('/settings')} className="btn btn-secondary">
+              Settings
+            </button>
+          </div>
+        </div>
+      </div>
+      <AccessibilityControls />
     </div>
   );
 }
